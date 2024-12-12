@@ -17,9 +17,6 @@ class Load extends Phaser.Scene {
     }
 
     create() {
-         this.scene.start("pathfinderScene");
-    }
-
-    update() {
+         this.scene.start("extractScene");
     }
 }
