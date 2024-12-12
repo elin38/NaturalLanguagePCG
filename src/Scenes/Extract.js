@@ -31,6 +31,26 @@ class Extract extends Phaser.Scene {
 
         // Group house tiles into clusters and draw bounding boxes
         const houseClusters = groupHouseTiles(houseLocations, this.housesLayer.layer.width);
+
+        const clusterDescriptions = houseClusters.map(cluster => {
+            const topLeft = {
+                x: Math.min(...cluster.map(tile => tile.x)),
+                y: Math.min(...cluster.map(tile => tile.y))
+            };
+            const bottomRight = {
+                x: Math.max(...cluster.map(tile => tile.x)),
+                y: Math.max(...cluster.map(tile => tile.y))
+            };
+            return {
+                topLeft,
+                bottomRight,
+                description: "A House" // Placeholder description
+            };
+        });
+    
+        // Update landmarks div
+        updateLandmarks(clusterDescriptions);
+
         houseClusters.forEach(cluster => {
             drawBoundingBox(this, cluster);
         });
@@ -118,6 +138,23 @@ function groupHouseTiles(houseLocations, layerWidth) {
 
     return clusters;
 }
+
+function updateLandmarks(clusterDescriptions) {
+    const landmarksDiv = document.getElementById('landmarks');
+    landmarksDiv.innerHTML = ""; // Clear previous content
+
+    clusterDescriptions.forEach(({ topLeft, bottomRight, description }, index) => {
+        const div = document.createElement('div');
+        div.className = 'landmark';
+        div.innerHTML = `
+            <strong>House ${index + 1}:</strong>
+            <br>[(${topLeft.x}, ${topLeft.y}), (${bottomRight.x}, ${bottomRight.y})]
+            <br>Description: ${description}
+        `;
+        landmarksDiv.appendChild(div);
+    });
+}
+
 
 // Draw a bounding box around a cluster of house tiles
 function drawBoundingBox(scene, cluster) {
