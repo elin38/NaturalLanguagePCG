@@ -66,10 +66,10 @@ class Extract extends Phaser.Scene {
                 description: "Tree cluster" // Placeholder description
             };
         });
+        
     
         // Update landmarks div
-        updateLandmarks(clusterDescriptions);
-        updateLandmarks(treeClusterDescriptions);
+        updateLandmarks(clusterDescriptions, treeClusterDescriptions);
 
         houseClusters.forEach(cluster => {
             drawBoundingBox(this, cluster);
@@ -162,16 +162,28 @@ function groupHouseTiles(houseLocations, layerWidth) {
     return clusters;
 }
 
-function updateLandmarks(clusterDescriptions) {
+function updateLandmarks(clusterDescriptions, treeClusterDescriptions) {
     const landmarksDiv = document.getElementById('landmarks');
     landmarksDiv.innerHTML = ""; // Clear previous content
 
     clusterDescriptions.forEach(({ topLeft, bottomRight, description }, index) => {
         const div = document.createElement('div');
         div.className = 'landmark';
-        // console.log(clusterDescriptions.description);
+
         div.innerHTML = `
             <strong>House ${index + 1}:</strong>
+            <br>[(${topLeft.x}, ${topLeft.y}), (${bottomRight.x}, ${bottomRight.y})]
+            <br>Description: ${description}
+        `;
+        landmarksDiv.appendChild(div);
+    });
+
+    treeClusterDescriptions.forEach(({ topLeft, bottomRight, description }, index) => {
+        const div = document.createElement('div');
+        div.className = 'landmark';
+
+        div.innerHTML = `
+            <strong>Tree Cluster ${index + 1}:</strong>
             <br>[(${topLeft.x}, ${topLeft.y}), (${bottomRight.x}, ${bottomRight.y})]
             <br>Description: ${description}
         `;
