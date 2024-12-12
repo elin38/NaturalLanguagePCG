@@ -5,13 +5,6 @@ const { Context } = await init();
 const { Solver, Int, And, Or, Not, Distinct } = new Context("main");
 let solver = new Solver();
 
-const bob = Int.const('bob');
-const mary = Int.const('mary');
-const cathy = Int.const('cathy');
-const sue = Int.const('sue');
-
-const petIndex = [null, "Cat", "Dog", "Bird", "Fish"];
-
 // Function to add text to the #app div
 function appendToApp(text) {
     const p = document.createElement('p');
