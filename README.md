@@ -1,4 +1,4 @@
 # PCG Fact Extractor
 Download files
 
-run: npm run dev
+run: $ npm run dev
