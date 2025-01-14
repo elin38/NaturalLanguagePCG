@@ -17,6 +17,6 @@ class Load extends Phaser.Scene {
     }
 
     create() {
-         this.scene.start("extractScene");
+         this.scene.start("TinyTownGen");
     }
 }

@@ -1,0 +1,32 @@
+{
+    "tileWidth": 16,
+    "tileHeight": 16,
+    "width": 4,
+    "height": 3,
+    "chimney": 1,
+    "doors": 1,
+    "name": "House1",
+    "data": [
+          48, 49, 50, 51,
+          60, 61, 62, 63,
+          72, 73, 85, 75
+    ]
+
+    {
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "width": 4,
+        "height": 3,
+        "chimney": 0,
+        "doors": 1,
+        "name": "House2",
+        "data": [
+            52, 53, 54, 55,
+            64, 65, 66, 67,
+            80, 81, 82, 83
+        ]
+    }
+    
+    
+}
+  

@@ -58,6 +58,10 @@ class Extract extends Phaser.Scene {
         // Camera settings
         this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.cameras.main.setZoom(this.SCALE);
+
+        this.input.keyboard.on("keydown-E", () => {
+            this.scene.start("TinyTownGen"); // Switch to the other scene
+        });
     }
 
     update() {
