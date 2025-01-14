@@ -6,6 +6,7 @@ class TinyTownGen extends Phaser.Scene {
     preload() {
         this.load.path = "./assets/";
         this.load.image("tinytown-tileset", "tilemap_packed.png");
+        this.load.json('HouseData', 'HousePreset.json');
     }
 
     init() {
@@ -24,11 +25,19 @@ class TinyTownGen extends Phaser.Scene {
     create() {
         this.generateGrass();
         this.partitionMap(); // Partition the map into specified dimensions
+
+        // Load house data from JSON (cached after preload)
+        var HousePreset = this.cache.json.get('HouseData');
+        console.log('This is house preset', HousePreset);
+
+        // Example: Generate house1 at position (5, 5)
+        this.generateHouse(HousePreset.house1, 2, 2);
+
         this.input.keyboard.on("keydown-E", () => {
-            this.scene.start("extractScene"); // Switch to the other scene
+            this.scene.start("extractScene"); // Switch to another scene
         });
         this.input.keyboard.on("keydown-R", () => {
-            this.scene.start("TileLabelScene"); // Switch to the other scene
+            this.scene.start("TileLabelScene"); // Switch to another scene
         });
     }
 
@@ -67,6 +76,21 @@ class TinyTownGen extends Phaser.Scene {
         // Create a layer and display it
         this.layer = map.createLayer(0, tileset, 0, 0);
         this.layer.setScale(this.SCALE); // Scale the layer if needed
+    }
+
+    // Function to generate a house on the tilemap
+    generateHouse(houseData, startX, startY) {
+        const width = houseData.width; // House width in tiles
+        const height = houseData.height; // House height in tiles
+        const data = houseData.data; // Array of tile indices for the house
+
+        // Loop through the house data and place tiles on the tilemap
+        for (let row = 0; row < height; row++) {
+            for (let col = 0; col < width; col++) {
+                const tileIndex = data[row * width + col]; // Get the tile index from the data array
+                this.layer.putTileAt(tileIndex, startX + col, startY + row); // Place the tile on the tilemap
+            }
+        }
     }
 
     partitionMap() {
