@@ -24,7 +24,7 @@ let config = {
         pixelArt: true  // prevent pixel art from getting blurred when scaled
     },
     width: 1280,
-    height: 800,
+    height: 768,
     scene: [Load, Extract, TinyTownGen, TileLabelScene]
 }
 

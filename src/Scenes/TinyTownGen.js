@@ -7,6 +7,8 @@ class TinyTownGen extends Phaser.Scene {
         this.load.path = "./assets/";
         this.load.image("tinytown-tileset", "tilemap_packed.png");
         this.load.json('HouseData', 'HousePreset.json');
+        this.load.json('FenceData', 'FencePreset.json');
+        this.load.json('ForestData', 'ForestPreset.json');
     }
 
     init() {
@@ -14,7 +16,7 @@ class TinyTownGen extends Phaser.Scene {
         this.SCALE = 2.0;
         this.TILEWIDTH = 40;
         this.TILEHEIGHT = 25;
-        this.mapHeight = 25;
+        this.mapHeight = 24;
         this.mapWidth = 40;
 
         // Specify the number of partitions
@@ -28,10 +30,24 @@ class TinyTownGen extends Phaser.Scene {
 
         // Load house data from JSON (cached after preload)
         var HousePreset = this.cache.json.get('HouseData');
+        var FencePreset = this.cache.json.get('FenceData');
+        var ForestPreset = this.cache.json.get('ForestData');
+
         console.log('This is house preset', HousePreset);
 
         // Example: Generate house1 at position (5, 5)
-        this.generateHouse(HousePreset.house1, 2, 2);
+        this.generate(HousePreset.house1, 2, 2);
+        this.generate(HousePreset.house2, 13, 2);
+        this.generate(HousePreset.house3, 13, 13);
+        this.generate(HousePreset.house4, 3, 12);
+
+        this.generate(FencePreset.Fence1, 23, 20);
+        this.generate(FencePreset.Fence2, 13, 18);
+        this.generate(FencePreset.Fence3, 3, 20);
+
+        this.generate(ForestPreset.Forest1, 2, 6);
+        this.generate(ForestPreset.Forest2, 12, 6);
+
 
         this.input.keyboard.on("keydown-E", () => {
             this.scene.start("extractScene"); // Switch to another scene
@@ -79,10 +95,10 @@ class TinyTownGen extends Phaser.Scene {
     }
 
     // Function to generate a house on the tilemap
-    generateHouse(houseData, startX, startY) {
-        const width = houseData.width; // House width in tiles
-        const height = houseData.height; // House height in tiles
-        const data = houseData.data; // Array of tile indices for the house
+    generate(info, startX, startY) {
+        const width = info.width; // House width in tiles
+        const height = info.height; // House height in tiles
+        const data = info.data; // Array of tile indices for the house
 
         // Loop through the house data and place tiles on the tilemap
         for (let row = 0; row < height; row++) {
