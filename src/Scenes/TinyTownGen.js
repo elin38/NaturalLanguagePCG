@@ -27,6 +27,27 @@ class TinyTownGen extends Phaser.Scene {
     create() {
         this.generateGrass();
         this.partitionMap(); // Partition the map into specified dimensions
+        this.createInputBox();
+
+        const Empty = [];
+        for (let y = 0; y < this.mapHeight; y++) {
+            const row = [];
+            for (let x = 0; x < this.mapWidth; x++) {
+                row.push(-1);
+            }
+            Empty.push(row);
+        }
+
+        const map = this.make.tilemap({
+            data: Empty,
+            tileWidth: this.TILESIZE,
+            tileHeight: this.TILESIZE,
+        });
+
+        const tileset = map.addTilesetImage("tinytown-tileset", null, this.TILESIZE, this.TILESIZE);
+        this.houseLayer = map.createLayer(0, tileset, 0, 0);
+        this.houseLayer.setScale(this.SCALE); // Scale the layer if needed
+        this.houseLayer.setDepth(2);
 
         // Load house data from JSON (cached after preload)
         var HousePreset = this.cache.json.get('HouseData');
@@ -48,6 +69,36 @@ class TinyTownGen extends Phaser.Scene {
         this.generate(ForestPreset.Forest1, 2, 6);
         this.generate(ForestPreset.Forest2, 12, 6);
 
+        const layerData = this.houseLayer.layer.data.flat().map(tile => tile.index); // Flatten 2D array and extract tile indexes
+        const houseLocations = extractHouses(layerData, this.houseLayer.layer.width);
+
+        console.log(houseLocations);
+
+        // Group house tiles into clusters and draw bounding boxes
+        const houseClusters = groupHouseTiles(houseLocations, this.houseLayer.layer.width);
+
+        const clusterDescriptions = houseClusters.map(cluster => {
+            const topLeft = {
+                x: Math.min(...cluster.map(tile => tile.x)),
+                y: Math.min(...cluster.map(tile => tile.y))
+            };
+            const bottomRight = {
+                x: Math.max(...cluster.map(tile => tile.x)),
+                y: Math.max(...cluster.map(tile => tile.y))
+            };
+            return {
+                topLeft,
+                bottomRight,
+                description: "A House" // Placeholder description
+            };
+        });
+    
+        // Update landmarks div
+        updateLandmarks(clusterDescriptions);
+
+        houseClusters.forEach(cluster => {
+            drawBoundingBox(this, cluster);
+        });
 
         this.input.keyboard.on("keydown-E", () => {
             this.scene.start("extractScene"); // Switch to another scene
@@ -55,7 +106,26 @@ class TinyTownGen extends Phaser.Scene {
         this.input.keyboard.on("keydown-R", () => {
             this.scene.start("TileLabelScene"); // Switch to another scene
         });
+
+        
     }
+
+    createInputBox() {
+        // const inputBox = this.add.dom(0, 0).createFromHTML(`
+        //     <input type="text" id="inputText" placeholder="Type something..." />
+        //     <button id="submitText">Submit</button>
+        // `);
+    
+        const inputText = document.getElementById('inputText');
+        const submitButton = document.getElementById('submitText');
+    
+        // Add an event listener for when the user submits text
+        submitButton.addEventListener('click', () => {
+            const text = inputText.value;
+            this.sendTextToLLM(text);
+        });
+    }
+    
 
     generateGrass() {
         const Grass = [];
@@ -65,7 +135,6 @@ class TinyTownGen extends Phaser.Scene {
             const row = [];
             for (let x = 0; x < this.mapWidth; x++) {
                 const noiseValue = noise.simplex2(x / this.sampleScale, y / this.sampleScale);
-                console.log(noiseValue);
                 let tile;
                 if (noiseValue > 0.5) {
                     tile = 0;
@@ -92,22 +161,21 @@ class TinyTownGen extends Phaser.Scene {
         // Create a layer and display it
         this.layer = map.createLayer(0, tileset, 0, 0);
         this.layer.setScale(this.SCALE); // Scale the layer if needed
+        this.layer.setDepth(1);
     }
 
-    // Function to generate a house on the tilemap
     generate(info, startX, startY) {
         const width = info.width; // House width in tiles
         const height = info.height; // House height in tiles
         const data = info.data; // Array of tile indices for the house
-
-        // Loop through the house data and place tiles on the tilemap
+    
         for (let row = 0; row < height; row++) {
             for (let col = 0; col < width; col++) {
-                const tileIndex = data[row * width + col]; // Get the tile index from the data array
-                this.layer.putTileAt(tileIndex, startX + col, startY + row); // Place the tile on the tilemap
+                const tileIndex = data[row * width + col];
+                this.houseLayer.putTileAt(tileIndex, startX + col, startY + row);
             }
         }
-    }
+    }    
 
     partitionMap() {
         // Calculate the size of each partition dynamically
@@ -116,6 +184,7 @@ class TinyTownGen extends Phaser.Scene {
 
         const graphics = this.add.graphics();
         graphics.lineStyle(2, 0xFF0000, 1); // Red lines for the grid
+        graphics.setDepth(3);
 
         // Draw vertical grid lines
         for (let x = 0; x <= this.mapWidth; x += squareWidth) {
@@ -133,4 +202,104 @@ class TinyTownGen extends Phaser.Scene {
             graphics.strokePath();
         }
     }
+}
+
+
+// Extract house tile indices
+function extractHouses(layerData, layerWidth) {
+    const houseTileNumbers = [
+        48, 49, 50, 51, 52, 53, 54, 55,
+        60, 61, 62, 63, 64, 65, 66, 67,
+        72, 73, 74, 75, 76, 77, 78, 79,
+        84, 85, 86, 87, 88, 89, 90, 91,
+        96, 97, 98, 99, 100, 101, 102,
+        108, 109, 110, 111, 112, 113, 114,
+        120, 121, 122, 123, 124, 125, 126
+    ];
+    const houseLocations = [];
+
+    // Loop through the layer data
+    layerData.forEach((tileNumber, index) => {
+        if (houseTileNumbers.includes(tileNumber)) {
+            const x = index % layerWidth;
+            const y = Math.floor(index / layerWidth);
+            houseLocations.push({ x, y });
+        }
+    });
+
+    return houseLocations;
+}
+
+// Group connected house tiles into clusters
+function groupHouseTiles(houseLocations, layerWidth) {
+    const visited = new Set();
+    const clusters = [];
+
+    const isNeighbor = (a, b) => 
+        (a.x === b.x && Math.abs(a.y - b.y) === 1) || 
+        (a.y === b.y && Math.abs(a.x - b.x) === 1);
+
+    const floodFill = (startTile) => {
+        const cluster = [];
+        const stack = [startTile];
+
+        while (stack.length > 0) {
+            const current = stack.pop();
+            const key = `${current.x},${current.y}`;
+            if (visited.has(key)) continue;
+
+            visited.add(key);
+            cluster.push(current);
+
+            houseLocations.forEach(tile => {
+                const tileKey = `${tile.x},${tile.y}`;
+                if (!visited.has(tileKey) && isNeighbor(current, tile)) {
+                    stack.push(tile);
+                }
+            });
+        }
+
+        return cluster;
+    };
+
+    houseLocations.forEach(tile => {
+        const key = `${tile.x},${tile.y}`;
+        if (!visited.has(key)) {
+            clusters.push(floodFill(tile));
+        }
+    });
+
+    return clusters;
+}
+
+function updateLandmarks(clusterDescriptions) {
+    const landmarksDiv = document.getElementById('landmarks');
+    landmarksDiv.innerHTML = ""; // Clear previous content
+
+    clusterDescriptions.forEach(({ topLeft, bottomRight, description }, index) => {
+        const div = document.createElement('div');
+        div.className = 'landmark';
+        div.innerHTML = `
+            <strong>House ${index + 1}:</strong>
+            <br>[(${topLeft.x}, ${topLeft.y}), (${bottomRight.x}, ${bottomRight.y})]
+            <br>Description: ${description}
+        `;
+        landmarksDiv.appendChild(div);
+    });
+}
+
+
+// Draw a bounding box around a cluster of house tiles
+function drawBoundingBox(scene, cluster) {
+    const minX = Math.min(...cluster.map(tile => tile.x)) * scene.TILESIZE;
+    const minY = Math.min(...cluster.map(tile => tile.y)) * scene.TILESIZE;
+    const maxX = (Math.max(...cluster.map(tile => tile.x)) + 1) * scene.TILESIZE;
+    const maxY = (Math.max(...cluster.map(tile => tile.y)) + 1) * scene.TILESIZE;
+
+    const graphics = scene.add.graphics();
+    graphics.lineStyle(2, 0x00ff00, 1);
+    graphics.strokeRect(minX, minY, maxX - minX, maxY - minY);
+
+    graphics.setDepth(4);
+    graphics.setScale(2.0);
 }

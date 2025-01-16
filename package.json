@@ -12,7 +12,6 @@
     "vite": "^5.4.10"
   },
   "dependencies": {
-    "perlin": "^1.0.0",
     "z3-solver": "^4.13.3"
   }
 }
