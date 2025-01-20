@@ -32,6 +32,14 @@ class TinyTownGen extends Phaser.Scene {
         this.generateGrass();
         this.partitionMap();
 
+        const inputElement = document.getElementById('inputText');
+        const buttonElement = document.getElementById('submitText');
+
+        buttonElement.addEventListener('click', () => {
+            const userInput = inputElement.value.trim();
+            this.handleUserCommand(userInput); // Call the command handler with input
+        });
+
         const Empty = [];
         for (let y = 0; y < this.mapHeight; y++) {
             const row = [];
@@ -112,12 +120,25 @@ class TinyTownGen extends Phaser.Scene {
 
         updateLandmarks(clusterDescriptions);
 
-        this.input.keyboard.on("keydown-E", () => {
-            this.scene.start("extractScene");
-        });
-        this.input.keyboard.on("keydown-R", () => {
-            this.scene.start("TileLabelScene");
-        });
+        // this.input.keyboard.on("keydown-E", () => {
+        //     this.scene.start("extractScene");
+        // });
+        // this.input.keyboard.on("keydown-R", () => {
+        //     this.scene.start("TileLabelScene");
+        // });
+    }
+
+    handleUserCommand(command) {
+        const commands = {
+            "generate grass": () => this.generateGrass(),
+            "restart": () => this.scene.restart(),
+        };
+
+        if (commands[command.toLowerCase()]) {
+            commands[command.toLowerCase()]();
+        } else {
+            console.log(`Unknown command: ${command}`);
+        }
     }
 
     isPlacementValid(preset, startX, startY, usedTiles) {
