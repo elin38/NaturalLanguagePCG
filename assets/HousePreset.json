@@ -59,54 +59,6 @@
             76, 77, 77, 79,
             76, 90, 91, 79 
         ]
-    },
-    "house5": {
-        "tileWidth": 16,
-        "tileHeight": 16,
-        "width": 5,
-        "height": 4,
-        "chimney": 2,
-        "doors": 1,
-        "windows": 2,
-        "name": "House5",
-        "data": [
-            52, 55, 53, 55, 54, 
-            64, 67, 65, 67, 66,
-            76, 88, 77, 88, 79,
-            76, 77, 89, 77, 79
-        ]
-    },
-    "house6": {
-        "tileWidth": 16,
-        "tileHeight": 16,
-        "width": 4,
-        "height": 4,
-        "chimney": 1,
-        "doors": 1,
-        "windows": 1,
-        "name": "House6",
-        "data": [
-            52, 55, 53, 54, 
-            64, 67, 65, 66,
-            76, 88, 77, 79,
-            76, 77, 89, 79
-        ]
-    },
-    "house7": {
-        "tileWidth": 16,
-        "tileHeight": 16,
-        "width": 4,
-        "height": 4,
-        "chimney": 1,
-        "doors": 1,
-        "windows": 1,
-        "name": "House7",
-        "data": [
-            48, 49, 51, 50, 
-            60, 61, 63, 62,
-            72, 84, 73, 75,
-            72, 73, 85, 75
-        ]
     }
 }
   
