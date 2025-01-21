@@ -265,15 +265,20 @@ function updateDescriptiveText(clusterDescriptions) {
         switch (currentCode.slice(0,2)) {
             case "Ho":
                 descriptionText += "House";
+                console.log(Number(currentCode[currentCode.length - 1]));
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
                         descriptionText +=  ", House with grey roof, House with orange wood walls, House with one chimney, Skinny house, Short house, House with single door"
+                        break;
                     case 2:
                         descriptionText += ", House with orange roof, House with grey stone walls, House with one chimney, Skinny house, Short house, House with single door"
+                        break;
                     case 3:
                         descriptionText += ", House with grey roof, House with orange wood walls, House with two chimneys, Wide house, Short house, House with single door"
+                        break;
                     case 4:
                         descriptionText += ", House with orange roof, House with grey stone walls, House with two chimneys, Skinny house, Tall house, House with double doors"
+                        break;
                 }
                 break;
             case "Fe":
@@ -281,10 +286,13 @@ function updateDescriptiveText(clusterDescriptions) {
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
                         descriptionText += ", Square fence, three by three fence, one fenced in tile, Small fenced area"
+                        break;
                     case 2:
                         descriptionText += ", Square fence, five by five fence, nine fenced in tiles, Large fenced area"
+                        break;
                     case 3:
                         descriptionText += ", Rectangular fence, three by five fence, three fenced in tiles, Medium fenced area"
+                        break;
                 }    
                 break;
             case "Fo":
@@ -292,8 +300,10 @@ function updateDescriptiveText(clusterDescriptions) {
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
                         descriptionText += ", Forest with two mushrooms, Mostly green forest, Spread out forest"
+                        break;
                     case 2:
                         descriptionText += ", Forest with one mushrooms, Mostly yellow forest, crowded forest, Forest with one beehive"
+                        break;
                 }
                 break;
         }
