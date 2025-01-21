@@ -60,23 +60,20 @@ class TinyTownGen extends Phaser.Scene {
         this.houseLayer.setScale(this.SCALE);
         this.houseLayer.setDepth(2);
 
-        const housePresets = Object.values(this.cache.json.get('HouseData'));
-        const fencePresets = Object.values(this.cache.json.get('FenceData'));
-        const forestPresets = Object.values(this.cache.json.get('ForestData'));
+        const HousePreset = this.cache.json.get('HouseData');
+        const FencePreset = this.cache.json.get('FenceData');
+        const ForestPreset = this.cache.json.get('ForestData');
 
         const partitionWidth = Math.floor(this.mapWidth / this.numHorizontalPartitions);
         const partitionHeight = Math.floor(this.mapHeight / this.numVerticalPartitions);
 
+        const housePresets = Object.values(HousePreset);
+        const fencePresets = Object.values(FencePreset);
+        const forestPresets = Object.values(ForestPreset);
+
         const usedTiles = new Set();
         const clusterDescriptions = [];
 
-        const presets = { houses: housePresets, fences: fencePresets, forests: forestPresets };
-        this.generateLandmarks(presets, partitionWidth, partitionHeight, usedTiles, clusterDescriptions);
-
-        updateLandmarks(clusterDescriptions);
-    }
-
-    generateLandmarks(presets, partitionWidth, partitionHeight, usedTiles, clusterDescriptions) {
         for (let row = 0; row < this.numVerticalPartitions; row++) {
             for (let col = 0; col < this.numHorizontalPartitions; col++) {
                 const startX = col * partitionWidth;
@@ -88,15 +85,15 @@ class TinyTownGen extends Phaser.Scene {
                 let itemCount = 0;
 
                 if (structureType === 0) {
-                    preset = Phaser.Utils.Array.GetRandom(presets.houses);
+                    preset = Phaser.Utils.Array.GetRandom(housePresets);
                     description = "House";
                     itemCount = ++this.houseCount;
                 } else if (structureType === 1) {
-                    preset = Phaser.Utils.Array.GetRandom(presets.fences);
+                    preset = Phaser.Utils.Array.GetRandom(fencePresets);
                     description = "Fenced Area";
                     itemCount = ++this.fenceCount;
                 } else {
-                    preset = Phaser.Utils.Array.GetRandom(presets.forests);
+                    preset = Phaser.Utils.Array.GetRandom(forestPresets);
                     description = "Forest";
                     itemCount = ++this.forestCount;
                 }
@@ -120,6 +117,15 @@ class TinyTownGen extends Phaser.Scene {
                 }
             }
         }
+
+        updateLandmarks(clusterDescriptions);
+
+        // this.input.keyboard.on("keydown-E", () => {
+        //     this.scene.start("extractScene");
+        // });
+        // this.input.keyboard.on("keydown-R", () => {
+        //     this.scene.start("TileLabelScene");
+        // });
     }
 
     handleUserCommand(command) {
