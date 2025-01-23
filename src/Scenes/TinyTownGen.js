@@ -30,7 +30,6 @@ class TinyTownGen extends Phaser.Scene {
 
     create() {
         this.generateGrass();
-        // this.partitionMap();
 
         const inputElement = document.getElementById('inputText');
         const buttonElement = document.getElementById('submitText');
@@ -44,7 +43,6 @@ class TinyTownGen extends Phaser.Scene {
         saveButton.addEventListener('click', () => {
             this.saveMapAsImage();
         });
-
 
         const Empty = [];
         for (let y = 0; y < this.mapHeight; y++) {
@@ -70,13 +68,28 @@ class TinyTownGen extends Phaser.Scene {
         const FencePreset = this.cache.json.get('FenceData');
         const ForestPreset = this.cache.json.get('ForestData');
 
-        const partitionWidth = Math.floor(this.mapWidth / this.numHorizontalPartitions);
-        const partitionHeight = Math.floor(this.mapHeight / this.numVerticalPartitions);
-
         const housePresets = Object.values(HousePreset);
         const fencePresets = Object.values(FencePreset);
         const forestPresets = Object.values(ForestPreset);
 
+        this.input.keyboard.on("keydown-P", () => {
+            for (let x = 0; x < 5; x += 1) {
+                this.generateStructures(housePresets, fencePresets, forestPresets);
+            }
+        });
+        
+        this.generateStructures(housePresets, fencePresets, forestPresets);
+    }
+
+    generateStructures(housePresets, fencePresets, forestPresets) {
+        this.houseLayer.forEachTile((tile) => {
+            if (tile) {
+                this.houseLayer.removeTileAt(tile.x, tile.y);
+            }
+        });
+    
+        const partitionWidth = Math.floor(this.mapWidth / this.numHorizontalPartitions);
+        const partitionHeight = Math.floor(this.mapHeight / this.numVerticalPartitions);
         const usedTiles = new Set();
         const clusterDescriptions = [];
 
@@ -119,7 +132,7 @@ class TinyTownGen extends Phaser.Scene {
                         description: `${description} ${itemCount}`,
                     });
 
-                    this.drawBoundingBox(posX, posY, preset.width, preset.height);
+                    // this.drawBoundingBox(posX, posY, preset.width, preset.height);
                 }
             }
         }
@@ -177,7 +190,6 @@ class TinyTownGen extends Phaser.Scene {
         for (let y = 0; y < this.mapHeight; y++) {
             const row = [];
             for (let x = 0; x < this.mapWidth; x++) {
-                // Choose a random value from 0, 1, 2, or 43
                 const options = [0, 1, 2];
                 const randomValue = options[Math.floor(Math.random() * options.length)];
                 row.push(randomValue);
@@ -235,18 +247,29 @@ class TinyTownGen extends Phaser.Scene {
     
     saveMapAsImage() {
         this.game.renderer.snapshot((image) => {
-            // Create a link element
             const link = document.createElement('a');
-            link.href = image.src; // Set the href to the image source
-            link.download = 'map.png'; // Set the file name
-            link.click(); // Programmatically click the link to trigger download
+            link.href = image.src;
+            link.download = 'maps/map.png';
+            link.click();
         });
+    }
+
+    information (numExports) {
+        for (let x = 0; x < numExports; x += 1) {
+            saveMapAsImage();
+            exportLandmarks(clusterDescriptions);
+        }
     }
 }
 
 function updateLandmarks(clusterDescriptions) {
     const landmarksDiv = document.getElementById('landmarks');
     landmarksDiv.innerHTML = "";
+
+    const exportButton = document.createElement('button');
+    exportButton.textContent = "Export Landmarks";
+    exportButton.onclick = () => exportLandmarks(clusterDescriptions);
+    landmarksDiv.appendChild(exportButton);
 
     clusterDescriptions.forEach(({ topLeft, bottomRight, description }) => {
         const div = document.createElement('div');
@@ -257,4 +280,29 @@ function updateLandmarks(clusterDescriptions) {
         `;
         landmarksDiv.appendChild(div);
     });
+}
+
+function exportLandmarks(clusterDescriptions) {
+    // Create a string to store all the landmark data
+    let landmarksText = "Landmarks:\n\n";
+
+    clusterDescriptions.forEach(({ topLeft, bottomRight, description }) => {
+        landmarksText += `Description: ${description}\n`;
+        landmarksText += `Top-Left: (${topLeft.x}, ${topLeft.y})\n`;
+        landmarksText += `Bottom-Right: (${bottomRight.x}, ${bottomRight.y})\n\n`;
+    });
+
+    // Create a Blob from the text
+    const blob = new Blob([landmarksText], { type: 'text/plain' });
+
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'landmarks.txt';
+
+    // Simulate a click to trigger the download
+    link.click();
+
+    // Clean up the URL object
+    URL.revokeObjectURL(link.href);
 }
