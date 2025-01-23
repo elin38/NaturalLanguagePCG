@@ -30,15 +30,21 @@ class TinyTownGen extends Phaser.Scene {
 
     create() {
         this.generateGrass();
-        this.partitionMap();
+        // this.partitionMap();
 
         const inputElement = document.getElementById('inputText');
         const buttonElement = document.getElementById('submitText');
 
         buttonElement.addEventListener('click', () => {
             const userInput = inputElement.value.trim();
-            this.handleUserCommand(userInput); // Call the command handler with input
+            this.handleUserCommand(userInput);
         });
+
+        const saveButton = document.getElementById('saveMap');
+        saveButton.addEventListener('click', () => {
+            this.saveMapAsImage();
+        });
+
 
         const Empty = [];
         for (let y = 0; y < this.mapHeight; y++) {
@@ -119,13 +125,6 @@ class TinyTownGen extends Phaser.Scene {
         }
 
         updateLandmarks(clusterDescriptions);
-
-        // this.input.keyboard.on("keydown-E", () => {
-        //     this.scene.start("extractScene");
-        // });
-        // this.input.keyboard.on("keydown-R", () => {
-        //     this.scene.start("TileLabelScene");
-        // });
     }
 
     handleUserCommand(command) {
@@ -179,7 +178,7 @@ class TinyTownGen extends Phaser.Scene {
             const row = [];
             for (let x = 0; x < this.mapWidth; x++) {
                 // Choose a random value from 0, 1, 2, or 43
-                const options = [0, 1, 2, 43];
+                const options = [0, 1, 2];
                 const randomValue = options[Math.floor(Math.random() * options.length)];
                 row.push(randomValue);
             }
@@ -232,6 +231,16 @@ class TinyTownGen extends Phaser.Scene {
             graphics.lineTo(this.mapWidth * this.TILESIZE * this.SCALE, y * this.TILESIZE * this.SCALE);
             graphics.strokePath();
         }
+    }
+    
+    saveMapAsImage() {
+        this.game.renderer.snapshot((image) => {
+            // Create a link element
+            const link = document.createElement('a');
+            link.href = image.src; // Set the href to the image source
+            link.download = 'map.png'; // Set the file name
+            link.click(); // Programmatically click the link to trigger download
+        });
     }
 }
 
