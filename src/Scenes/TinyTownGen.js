@@ -26,6 +26,9 @@ class TinyTownGen extends Phaser.Scene {
         this.houseCount = 0;
         this.fenceCount = 0;
         this.forestCount = 0;
+
+        noise.seed(Math.random());
+
     }
 
     create() {
