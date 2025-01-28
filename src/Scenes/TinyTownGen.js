@@ -259,12 +259,14 @@ function updateLandmarks(clusterDescriptions) {
 }
 
 function updateDescriptiveText(clusterDescriptions) {
+    let englishIdList = [];
     for(quadrent of clusterDescriptions) {
         let descriptionText = "";
         let currentCode = quadrent.description.presetCode
         switch (currentCode.slice(0,2)) {
             case "Ho":
                 descriptionText += "House";
+                englishIdList.push("House");
                 console.log(Number(currentCode[currentCode.length - 1]));
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
@@ -283,6 +285,7 @@ function updateDescriptiveText(clusterDescriptions) {
                 break;
             case "Fe":
                 descriptionText += "Fenced Area";
+                englishIdList.push("Fenced Area");
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
                         descriptionText += ", Square fence, three by three fence, one fenced in tile, Small fenced area"
@@ -297,6 +300,7 @@ function updateDescriptiveText(clusterDescriptions) {
                 break;
             case "Fo":
                 descriptionText += "Forest";
+                englishIdList.push("Forest");
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
                         descriptionText += ", Forest with two mushrooms, Mostly green forest, Spread out forest"
@@ -308,5 +312,23 @@ function updateDescriptiveText(clusterDescriptions) {
                 break;
         }
         quadrent.description.textDescription = descriptionText;
+    }
+
+    for(let i = 0; i < clusterDescriptions.length; i++) {
+        let currentDescription = clusterDescriptions[i].description.textDescription
+        if (i - 1 > 0) { //Left
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i - 1] + " to the left"
+        }   
+        if (i + 1 < clusterDescriptions.length) { //Right
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i + 1] + " to the right"
+
+        }
+        if (i - 4 > 0) { //Above
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i - 4] + " above it"
+        }
+        if (i + 4 < clusterDescriptions.length) { //Below
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i + 4] + " below it"
+        }
+        clusterDescriptions[i].description.textDescription = currentDescription;
     }
 }
