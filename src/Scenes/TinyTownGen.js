@@ -41,7 +41,9 @@ class TinyTownGen extends Phaser.Scene {
 
         const saveButton = document.getElementById('saveMap');
         saveButton.addEventListener('click', () => {
-            this.saveMapAsImage();
+            // this.saveMapAsImage("mapimg");
+            // this.saveLandmarks("maptext");
+            this.saveMapAndLandmarksAsZip()
         });
 
         const Empty = [];
@@ -71,12 +73,6 @@ class TinyTownGen extends Phaser.Scene {
         const housePresets = Object.values(HousePreset);
         const fencePresets = Object.values(FencePreset);
         const forestPresets = Object.values(ForestPreset);
-
-        this.input.keyboard.on("keydown-P", () => {
-            for (let x = 0; x < 5; x += 1) {
-                this.generateStructures(housePresets, fencePresets, forestPresets);
-            }
-        });
         
         this.generateStructures(housePresets, fencePresets, forestPresets);
     }
@@ -144,6 +140,7 @@ class TinyTownGen extends Phaser.Scene {
         const commands = {
             "generate grass": () => this.generateGrass(),
             "restart": () => this.scene.restart(),
+            // "regen": () => this.generateStructures(housePresets, fencePresets, forestPresets),
         };
 
         if (commands[command.toLowerCase()]) {
@@ -245,31 +242,63 @@ class TinyTownGen extends Phaser.Scene {
         }
     }
     
-    saveMapAsImage() {
+    saveMapAsImage(route) {
         this.game.renderer.snapshot((image) => {
             const link = document.createElement('a');
             link.href = image.src;
-            link.download = 'maps/map.png';
+            link.download = route;
             link.click();
         });
     }
 
-    information (numExports) {
-        for (let x = 0; x < numExports; x += 1) {
-            saveMapAsImage();
-            exportLandmarks(clusterDescriptions);
+    saveLandmarks(route) {
+        const landmarksDiv = document.getElementById('landmarks');
+            if (!landmarksDiv || landmarksDiv.innerText.trim() === "") {
+            console.log("No landmarks to save.");
+            return;
         }
+        const landmarksText = landmarksDiv.innerText;
+        const blob = new Blob([landmarksText], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = route;
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
+
+    saveMapAndLandmarksAsZip() {
+        const zip = new JSZip();
+    
+        // Save the map image as a PNG in the ZIP archive
+        this.game.renderer.snapshot((image) => {
+            const imgData = image.src.split(",")[1]; // Get base64 data
+            zip.file("map.png", imgData, { base64: true });
+    
+            // Save the landmarks as a text file in the ZIP archive
+            const landmarksDiv = document.getElementById("landmarks");
+            if (landmarksDiv && landmarksDiv.innerText.trim() !== "") {
+                const landmarksText = landmarksDiv.innerText;
+                zip.file("landmarks.txt", landmarksText);
+            } else {
+                console.log("No landmarks to save.");
+            }
+    
+            // Generate the ZIP file and trigger the download
+            zip.generateAsync({ type: "blob" }).then((content) => {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = "map_and_landmarks.zip";
+                link.click();
+                URL.revokeObjectURL(link.href);
+            });
+        });
+    }
+
 }
 
 function updateLandmarks(clusterDescriptions) {
     const landmarksDiv = document.getElementById('landmarks');
     landmarksDiv.innerHTML = "";
-
-    const exportButton = document.createElement('button');
-    exportButton.textContent = "Export Landmarks";
-    exportButton.onclick = () => exportLandmarks(clusterDescriptions);
-    landmarksDiv.appendChild(exportButton);
 
     clusterDescriptions.forEach(({ topLeft, bottomRight, description }) => {
         const div = document.createElement('div');
@@ -280,29 +309,4 @@ function updateLandmarks(clusterDescriptions) {
         `;
         landmarksDiv.appendChild(div);
     });
-}
-
-function exportLandmarks(clusterDescriptions) {
-    // Create a string to store all the landmark data
-    let landmarksText = "Landmarks:\n\n";
-
-    clusterDescriptions.forEach(({ topLeft, bottomRight, description }) => {
-        landmarksText += `Description: ${description}\n`;
-        landmarksText += `Top-Left: (${topLeft.x}, ${topLeft.y})\n`;
-        landmarksText += `Bottom-Right: (${bottomRight.x}, ${bottomRight.y})\n\n`;
-    });
-
-    // Create a Blob from the text
-    const blob = new Blob([landmarksText], { type: 'text/plain' });
-
-    // Create a download link
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'landmarks.txt';
-
-    // Simulate a click to trigger the download
-    link.click();
-
-    // Clean up the URL object
-    URL.revokeObjectURL(link.href);
 }
