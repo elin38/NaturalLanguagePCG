@@ -182,13 +182,22 @@ class TinyTownGen extends Phaser.Scene {
 
     generateGrass() {
         const Grass = [];
-    
+
+        // Fill the array with tile index 0
         for (let y = 0; y < this.mapHeight; y++) {
             const row = [];
             for (let x = 0; x < this.mapWidth; x++) {
-                const options = [0, 1, 2];
-                const randomValue = options[Math.floor(Math.random() * options.length)];
-                row.push(randomValue);
+                const noiseValue = noise.simplex2(x / 10, y / 10);
+                console.log(noiseValue);
+                let tile;
+                if (noiseValue > 0.5) {
+                    tile = 0;
+                } else if (noiseValue > 0) {
+                    tile = 1;
+                } else {
+                    tile = 2;
+                }
+                row.push(tile);
             }
             Grass.push(row);
         }
@@ -204,7 +213,7 @@ class TinyTownGen extends Phaser.Scene {
         this.layer.setScale(this.SCALE);
         this.layer.setDepth(1);
     }
-    
+
     generate(info, startX, startY) {
         const width = info.width;
         const height = info.height;
