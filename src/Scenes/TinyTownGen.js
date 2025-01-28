@@ -142,7 +142,6 @@ class TinyTownGen extends Phaser.Scene {
         updateDescriptiveText(clusterDescriptions);
 
         updateLandmarks(clusterDescriptions);
-        console.log(clusterDescriptions);
         // this.input.keyboard.on("keydown-E", () => {
         //     this.scene.start("extractScene");
         // });
@@ -335,7 +334,6 @@ function updateDescriptiveText(clusterDescriptions) {
             case "Ho":
                 descriptionText += "House";
                 englishIdList.push("House");
-                console.log(Number(currentCode[currentCode.length - 1]));
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
                         descriptionText +=  ", House with grey roof, House with orange wood walls, House with one chimney, Skinny house, Short house, House with single door"
