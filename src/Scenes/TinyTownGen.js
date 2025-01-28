@@ -41,9 +41,8 @@ class TinyTownGen extends Phaser.Scene {
 
         const saveButton = document.getElementById('saveMap');
         saveButton.addEventListener('click', () => {
-            // this.saveMapAsImage("mapimg");
-            // this.saveLandmarks("maptext");
-            this.saveMapAndLandmarksAsZip()
+            console.log("saving");
+            this.saveMultipleMapsAsZip(10);
         });
 
         const Empty = [];
@@ -266,34 +265,60 @@ class TinyTownGen extends Phaser.Scene {
         URL.revokeObjectURL(link.href);
     }
 
-    saveMapAndLandmarksAsZip() {
-        const zip = new JSZip();
+    saveMultipleMapsAsZip(numMaps = 10) {
+        const parentZip = new JSZip();
     
-        // Save the map image as a PNG in the ZIP archive
-        this.game.renderer.snapshot((image) => {
-            const imgData = image.src.split(",")[1]; // Get base64 data
-            zip.file("map.png", imgData, { base64: true });
+        // Get the structure presets
+        const housePresets = Object.values(this.cache.json.get("HouseData"));
+        const fencePresets = Object.values(this.cache.json.get("FenceData"));
+        const forestPresets = Object.values(this.cache.json.get("ForestData"));
     
-            // Save the landmarks as a text file in the ZIP archive
+        // Helper function to delay execution
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    
+        const createSingleMapFolder = async (index) => {
+            const mapFolder = parentZip.folder(`Map_${index + 1}`); // Create a folder for each map
+    
+            // Regenerate the map
+            this.generateStructures(housePresets, fencePresets, forestPresets);
+    
+            // Delay to allow Phaser to render updates
+            await delay(100);
+    
+            // Capture the map image and add it to the folder
+            await new Promise((resolve) => {
+                this.game.renderer.snapshot((image) => {
+                    const imgData = image.src.split(",")[1]; // Get base64 data
+                    mapFolder.file(`map_${index + 1}.png`, imgData, { base64: true });
+                    resolve();
+                });
+            });
+    
+            // Add landmarks text to the folder
             const landmarksDiv = document.getElementById("landmarks");
             if (landmarksDiv && landmarksDiv.innerText.trim() !== "") {
                 const landmarksText = landmarksDiv.innerText;
-                zip.file("landmarks.txt", landmarksText);
-            } else {
-                console.log("No landmarks to save.");
+                mapFolder.file(`landmarks_${index + 1}.txt`, landmarksText);
+            }
+        };
+    
+        // Create all the map folders sequentially
+        const createAllMaps = async () => {
+            for (let i = 0; i < numMaps; i++) {
+                await createSingleMapFolder(i);
             }
     
-            // Generate the ZIP file and trigger the download
-            zip.generateAsync({ type: "blob" }).then((content) => {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(content);
-                link.download = "map_and_landmarks.zip";
-                link.click();
-                URL.revokeObjectURL(link.href);
-            });
-        });
+            // Generate the parent ZIP and trigger download
+            const finalContent = await parentZip.generateAsync({ type: "blob" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(finalContent);
+            link.download = "all_maps.zip";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+    
+        createAllMaps();
     }
-
 }
 
 function updateLandmarks(clusterDescriptions) {
