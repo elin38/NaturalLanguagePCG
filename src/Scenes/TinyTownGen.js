@@ -30,14 +30,20 @@ class TinyTownGen extends Phaser.Scene {
 
     create() {
         this.generateGrass();
-        this.partitionMap();
 
         const inputElement = document.getElementById('inputText');
         const buttonElement = document.getElementById('submitText');
 
         buttonElement.addEventListener('click', () => {
             const userInput = inputElement.value.trim();
-            this.handleUserCommand(userInput); // Call the command handler with input
+            this.handleUserCommand(userInput);
+        });
+
+        const saveButton = document.getElementById('saveMap');
+        saveButton.addEventListener('click', () => {
+            // this.saveMapAsImage("mapimg");
+            // this.saveLandmarks("maptext");
+            this.saveMapAndLandmarksAsZip()
         });
 
         const Empty = [];
@@ -64,13 +70,22 @@ class TinyTownGen extends Phaser.Scene {
         const FencePreset = this.cache.json.get('FenceData');
         const ForestPreset = this.cache.json.get('ForestData');
 
-        const partitionWidth = Math.floor(this.mapWidth / this.numHorizontalPartitions);
-        const partitionHeight = Math.floor(this.mapHeight / this.numVerticalPartitions);
-
         const housePresets = Object.values(HousePreset);
         const fencePresets = Object.values(FencePreset);
         const forestPresets = Object.values(ForestPreset);
+        
+        this.generateStructures(housePresets, fencePresets, forestPresets);
+    }
 
+    generateStructures(housePresets, fencePresets, forestPresets) {
+        this.houseLayer.forEachTile((tile) => {
+            if (tile) {
+                this.houseLayer.removeTileAt(tile.x, tile.y);
+            }
+        });
+    
+        const partitionWidth = Math.floor(this.mapWidth / this.numHorizontalPartitions);
+        const partitionHeight = Math.floor(this.mapHeight / this.numVerticalPartitions);
         const usedTiles = new Set();
         const clusterDescriptions = [];
 
@@ -119,7 +134,7 @@ class TinyTownGen extends Phaser.Scene {
                         description: description,
                     });
 
-                    this.drawBoundingBox(posX, posY, preset.width, preset.height);
+                    // this.drawBoundingBox(posX, posY, preset.width, preset.height);
                 }
             }
         }
@@ -140,6 +155,7 @@ class TinyTownGen extends Phaser.Scene {
         const commands = {
             "generate grass": () => this.generateGrass(),
             "restart": () => this.scene.restart(),
+            // "regen": () => this.generateStructures(housePresets, fencePresets, forestPresets),
         };
 
         if (commands[command.toLowerCase()]) {
@@ -186,8 +202,7 @@ class TinyTownGen extends Phaser.Scene {
         for (let y = 0; y < this.mapHeight; y++) {
             const row = [];
             for (let x = 0; x < this.mapWidth; x++) {
-                // Choose a random value from 0, 1, 2, or 43
-                const options = [0, 1, 2, 43];
+                const options = [0, 1, 2];
                 const randomValue = options[Math.floor(Math.random() * options.length)];
                 row.push(randomValue);
             }
@@ -241,6 +256,59 @@ class TinyTownGen extends Phaser.Scene {
             graphics.strokePath();
         }
     }
+    
+    saveMapAsImage(route) {
+        this.game.renderer.snapshot((image) => {
+            const link = document.createElement('a');
+            link.href = image.src;
+            link.download = route;
+            link.click();
+        });
+    }
+
+    saveLandmarks(route) {
+        const landmarksDiv = document.getElementById('landmarks');
+            if (!landmarksDiv || landmarksDiv.innerText.trim() === "") {
+            console.log("No landmarks to save.");
+            return;
+        }
+        const landmarksText = landmarksDiv.innerText;
+        const blob = new Blob([landmarksText], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = route;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    saveMapAndLandmarksAsZip() {
+        const zip = new JSZip();
+    
+        // Save the map image as a PNG in the ZIP archive
+        this.game.renderer.snapshot((image) => {
+            const imgData = image.src.split(",")[1]; // Get base64 data
+            zip.file("map.png", imgData, { base64: true });
+    
+            // Save the landmarks as a text file in the ZIP archive
+            const landmarksDiv = document.getElementById("landmarks");
+            if (landmarksDiv && landmarksDiv.innerText.trim() !== "") {
+                const landmarksText = landmarksDiv.innerText;
+                zip.file("landmarks.txt", landmarksText);
+            } else {
+                console.log("No landmarks to save.");
+            }
+    
+            // Generate the ZIP file and trigger the download
+            zip.generateAsync({ type: "blob" }).then((content) => {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = "map_and_landmarks.zip";
+                link.click();
+                URL.revokeObjectURL(link.href);
+            });
+        });
+    }
+
 }
 
 function updateLandmarks(clusterDescriptions) {
