@@ -80,6 +80,11 @@ class TinyTownGen extends Phaser.Scene {
     }
 
     generateStructures(housePresets, fencePresets, forestPresets) {
+        // Reset counters before generating a new map
+        this.houseCount = 0;
+        this.fenceCount = 0;
+        this.forestCount = 0;
+    
         this.houseLayer.forEachTile((tile) => {
             if (tile) {
                 this.houseLayer.removeTileAt(tile.x, tile.y);
@@ -90,17 +95,17 @@ class TinyTownGen extends Phaser.Scene {
         const partitionHeight = Math.floor(this.mapHeight / this.numVerticalPartitions);
         const usedTiles = new Set();
         const clusterDescriptions = [];
-
+    
         for (let row = 0; row < this.numVerticalPartitions; row++) {
             for (let col = 0; col < this.numHorizontalPartitions; col++) {
                 const startX = col * partitionWidth;
                 const startY = row * partitionHeight;
-
+    
                 const structureType = Phaser.Math.Between(0, 2);
                 let preset;
                 let description = "";
                 let itemCount = 0;
-
+    
                 if (structureType === 0) {
                     preset = Phaser.Utils.Array.GetRandom(housePresets);
                     description = "House";
@@ -114,29 +119,28 @@ class TinyTownGen extends Phaser.Scene {
                     description = "Forest";
                     itemCount = ++this.forestCount;
                 }
-
+    
                 const maxStartX = startX + partitionWidth - preset.width;
                 const maxStartY = startY + partitionHeight - preset.height;
                 const posX = Phaser.Math.Between(startX, maxStartX);
                 const posY = Phaser.Math.Between(startY, maxStartY);
-
+    
                 if (this.isPlacementValid(preset, posX, posY, usedTiles)) {
                     this.generate(preset, posX, posY);
                     this.markOccupied(preset, posX, posY, usedTiles);
-
+    
                     clusterDescriptions.push({
                         topLeft: { x: posX, y: posY },
                         bottomRight: { x: posX + preset.width - 1, y: posY + preset.height - 1 },
                         description: `${description} ${itemCount}`,
                     });
-
-                    // this.drawBoundingBox(posX, posY, preset.width, preset.height);
                 }
             }
         }
-
+    
         updateLandmarks(clusterDescriptions);
     }
+    
 
     handleUserCommand(command) {
         const commands = {
