@@ -105,21 +105,25 @@ class TinyTownGen extends Phaser.Scene {
                 let preset;
                 let description = "";
                 let itemCount = 0;
-    
-                if (structureType === 0) {
-                    preset = Phaser.Utils.Array.GetRandom(housePresets);
-                    description = "House";
-                    itemCount = ++this.houseCount;
-                } else if (structureType === 1) {
-                    preset = Phaser.Utils.Array.GetRandom(fencePresets);
-                    description = "Fenced Area";
-                    itemCount = ++this.fenceCount;
-                } else {
-                    preset = Phaser.Utils.Array.GetRandom(forestPresets);
-                    description = "Forest";
-                    itemCount = ++this.forestCount;
+
+                switch (structureType) {
+                    case 0:
+                        preset = Phaser.Utils.Array.GetRandom(housePresets);
+                        itemCount = ++this.houseCount;
+                        break;
+                    case 1:
+                        preset = Phaser.Utils.Array.GetRandom(fencePresets);
+                        itemCount = ++this.fenceCount;
+                        break;
+                    case 2:
+                        preset = Phaser.Utils.Array.GetRandom(forestPresets);
+                        //description = "Forest";
+                        itemCount = ++this.forestCount;
+                        break;
                 }
-    
+
+                description = {presetCode: preset.name, textDescription: ""};
+
                 const maxStartX = startX + partitionWidth - preset.width;
                 const maxStartY = startY + partitionHeight - preset.height;
                 const posX = Phaser.Math.Between(startX, maxStartX);
@@ -132,13 +136,19 @@ class TinyTownGen extends Phaser.Scene {
                     clusterDescriptions.push({
                         topLeft: { x: posX, y: posY },
                         bottomRight: { x: posX + preset.width - 1, y: posY + preset.height - 1 },
-                        description: `${description} ${itemCount}`,
+                        description: description,
                     });
                 }
             }
         }
-    
+        updateDescriptiveText(clusterDescriptions);
         updateLandmarks(clusterDescriptions);
+        // this.input.keyboard.on("keydown-E", () => {
+        //     this.scene.start("extractScene");
+        // });
+        // this.input.keyboard.on("keydown-R", () => {
+        //     this.scene.start("TileLabelScene");
+        // });
     }
     
 
@@ -345,9 +355,83 @@ function updateLandmarks(clusterDescriptions) {
         const div = document.createElement('div');
         div.className = 'landmark';
         div.innerHTML = `
-            <strong>${description}:</strong>
+            <strong>${description.presetCode}:</strong> <i>${description.textDescription}</i>
             <br>[(${topLeft.x}, ${topLeft.y}), (${bottomRight.x}, ${bottomRight.y})]
         `;
         landmarksDiv.appendChild(div);
     });
+}
+
+function updateDescriptiveText(clusterDescriptions) {
+    let englishIdList = [];
+    for(quadrent of clusterDescriptions) {
+        let descriptionText = "";
+        let currentCode = quadrent.description.presetCode
+        switch (currentCode.slice(0,2)) {
+            case "Ho":
+                descriptionText += "House";
+                englishIdList.push("House");
+                switch (Number(currentCode[currentCode.length - 1])) {
+                    case 1:
+                        descriptionText +=  ", House with grey roof, House with orange wood walls, House with one chimney, Skinny house, Short house, House with single door"
+                        break;
+                    case 2:
+                        descriptionText += ", House with orange roof, House with grey stone walls, House with one chimney, Skinny house, Short house, House with single door"
+                        break;
+                    case 3:
+                        descriptionText += ", House with grey roof, House with orange wood walls, House with two chimneys, Wide house, Short house, House with single door"
+                        break;
+                    case 4:
+                        descriptionText += ", House with orange roof, House with grey stone walls, House with two chimneys, Skinny house, Tall house, House with double doors"
+                        break;
+                }
+                break;
+            case "Fe":
+                descriptionText += "Fenced Area";
+                englishIdList.push("Fenced Area");
+                switch (Number(currentCode[currentCode.length - 1])) {
+                    case 1:
+                        descriptionText += ", Square fence, three by three fence, one fenced in tile, Small fenced area"
+                        break;
+                    case 2:
+                        descriptionText += ", Square fence, five by five fence, nine fenced in tiles, Large fenced area"
+                        break;
+                    case 3:
+                        descriptionText += ", Rectangular fence, three by five fence, three fenced in tiles, Medium fenced area"
+                        break;
+                }    
+                break;
+            case "Fo":
+                descriptionText += "Forest";
+                englishIdList.push("Forest");
+                switch (Number(currentCode[currentCode.length - 1])) {
+                    case 1:
+                        descriptionText += ", Forest with two mushrooms, Mostly green forest, Spread out forest"
+                        break;
+                    case 2:
+                        descriptionText += ", Forest with one mushrooms, Mostly yellow forest, crowded forest, Forest with one beehive"
+                        break;
+                }
+                break;
+        }
+        quadrent.description.textDescription = descriptionText;
+    }
+
+    for(let i = 0; i < clusterDescriptions.length; i++) {
+        let currentDescription = clusterDescriptions[i].description.textDescription
+        if (i - 1 > 0) { //Left
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i - 1] + " to the left"
+        }   
+        if (i + 1 < clusterDescriptions.length) { //Right
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i + 1] + " to the right"
+
+        }
+        if (i - 4 > 0) { //Above
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i - 4] + " above it"
+        }
+        if (i + 4 < clusterDescriptions.length) { //Below
+            currentDescription += ", " + englishIdList[i] + " with a " + englishIdList[i + 4] + " below it"
+        }
+        clusterDescriptions[i].description.textDescription = currentDescription;
+    }
 }
