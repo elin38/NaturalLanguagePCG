@@ -26,6 +26,9 @@ class TinyTownGen extends Phaser.Scene {
         this.houseCount = 0;
         this.fenceCount = 0;
         this.forestCount = 0;
+
+        noise.seed(Math.random());
+
     }
 
     create() {
@@ -41,9 +44,8 @@ class TinyTownGen extends Phaser.Scene {
 
         const saveButton = document.getElementById('saveMap');
         saveButton.addEventListener('click', () => {
-            // this.saveMapAsImage("mapimg");
-            // this.saveLandmarks("maptext");
-            this.saveMapAndLandmarksAsZip()
+            console.log("saving");
+            this.saveMultipleMapsAsZip(10);
         });
 
         const Empty = [];
@@ -78,6 +80,11 @@ class TinyTownGen extends Phaser.Scene {
     }
 
     generateStructures(housePresets, fencePresets, forestPresets) {
+        // Reset counters before generating a new map
+        this.houseCount = 0;
+        this.fenceCount = 0;
+        this.forestCount = 0;
+    
         this.houseLayer.forEachTile((tile) => {
             if (tile) {
                 this.houseLayer.removeTileAt(tile.x, tile.y);
@@ -88,12 +95,12 @@ class TinyTownGen extends Phaser.Scene {
         const partitionHeight = Math.floor(this.mapHeight / this.numVerticalPartitions);
         const usedTiles = new Set();
         const clusterDescriptions = [];
-
+    
         for (let row = 0; row < this.numVerticalPartitions; row++) {
             for (let col = 0; col < this.numHorizontalPartitions; col++) {
                 const startX = col * partitionWidth;
                 const startY = row * partitionHeight;
-
+    
                 const structureType = Phaser.Math.Between(0, 2);
                 let preset;
                 let description = "";
@@ -102,12 +109,10 @@ class TinyTownGen extends Phaser.Scene {
                 switch (structureType) {
                     case 0:
                         preset = Phaser.Utils.Array.GetRandom(housePresets);
-                        //description = "House";
                         itemCount = ++this.houseCount;
                         break;
                     case 1:
                         preset = Phaser.Utils.Array.GetRandom(fencePresets);
-                        //description = "Fenced Area";
                         itemCount = ++this.fenceCount;
                         break;
                     case 2:
@@ -123,24 +128,20 @@ class TinyTownGen extends Phaser.Scene {
                 const maxStartY = startY + partitionHeight - preset.height;
                 const posX = Phaser.Math.Between(startX, maxStartX);
                 const posY = Phaser.Math.Between(startY, maxStartY);
-
+    
                 if (this.isPlacementValid(preset, posX, posY, usedTiles)) {
                     this.generate(preset, posX, posY);
                     this.markOccupied(preset, posX, posY, usedTiles);
-
+    
                     clusterDescriptions.push({
                         topLeft: { x: posX, y: posY },
                         bottomRight: { x: posX + preset.width - 1, y: posY + preset.height - 1 },
                         description: description,
                     });
-
-                    // this.drawBoundingBox(posX, posY, preset.width, preset.height);
                 }
             }
         }
-
         updateDescriptiveText(clusterDescriptions);
-
         updateLandmarks(clusterDescriptions);
         // this.input.keyboard.on("keydown-E", () => {
         //     this.scene.start("extractScene");
@@ -149,6 +150,7 @@ class TinyTownGen extends Phaser.Scene {
         //     this.scene.start("TileLabelScene");
         // });
     }
+    
 
     handleUserCommand(command) {
         const commands = {
@@ -197,13 +199,22 @@ class TinyTownGen extends Phaser.Scene {
 
     generateGrass() {
         const Grass = [];
-    
+
+        // Fill the array with tile index 0
         for (let y = 0; y < this.mapHeight; y++) {
             const row = [];
             for (let x = 0; x < this.mapWidth; x++) {
-                const options = [0, 1, 2];
-                const randomValue = options[Math.floor(Math.random() * options.length)];
-                row.push(randomValue);
+                const noiseValue = noise.simplex2(x / 10, y / 10);
+                console.log(noiseValue);
+                let tile;
+                if (noiseValue > 0.5) {
+                    tile = 0;
+                } else if (noiseValue > 0) {
+                    tile = 1;
+                } else {
+                    tile = 2;
+                }
+                row.push(tile);
             }
             Grass.push(row);
         }
@@ -219,7 +230,7 @@ class TinyTownGen extends Phaser.Scene {
         this.layer.setScale(this.SCALE);
         this.layer.setDepth(1);
     }
-    
+
     generate(info, startX, startY) {
         const width = info.width;
         const height = info.height;
@@ -280,34 +291,60 @@ class TinyTownGen extends Phaser.Scene {
         URL.revokeObjectURL(link.href);
     }
 
-    saveMapAndLandmarksAsZip() {
-        const zip = new JSZip();
+    saveMultipleMapsAsZip(numMaps = 10) {
+        const parentZip = new JSZip();
     
-        // Save the map image as a PNG in the ZIP archive
-        this.game.renderer.snapshot((image) => {
-            const imgData = image.src.split(",")[1]; // Get base64 data
-            zip.file("map.png", imgData, { base64: true });
+        // Get the structure presets
+        const housePresets = Object.values(this.cache.json.get("HouseData"));
+        const fencePresets = Object.values(this.cache.json.get("FenceData"));
+        const forestPresets = Object.values(this.cache.json.get("ForestData"));
     
-            // Save the landmarks as a text file in the ZIP archive
+        // Helper function to delay execution
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    
+        const createSingleMapFolder = async (index) => {
+            const mapFolder = parentZip.folder(`Map_${index + 1}`); // Create a folder for each map
+    
+            // Regenerate the map
+            this.generateStructures(housePresets, fencePresets, forestPresets);
+    
+            // Delay to allow Phaser to render updates
+            await delay(100);
+    
+            // Capture the map image and add it to the folder
+            await new Promise((resolve) => {
+                this.game.renderer.snapshot((image) => {
+                    const imgData = image.src.split(",")[1]; // Get base64 data
+                    mapFolder.file(`map_${index + 1}.png`, imgData, { base64: true });
+                    resolve();
+                });
+            });
+    
+            // Add landmarks text to the folder
             const landmarksDiv = document.getElementById("landmarks");
             if (landmarksDiv && landmarksDiv.innerText.trim() !== "") {
                 const landmarksText = landmarksDiv.innerText;
-                zip.file("landmarks.txt", landmarksText);
-            } else {
-                console.log("No landmarks to save.");
+                mapFolder.file(`landmarks_${index + 1}.txt`, landmarksText);
+            }
+        };
+    
+        // Create all the map folders sequentially
+        const createAllMaps = async () => {
+            for (let i = 0; i < numMaps; i++) {
+                await createSingleMapFolder(i);
             }
     
-            // Generate the ZIP file and trigger the download
-            zip.generateAsync({ type: "blob" }).then((content) => {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(content);
-                link.download = "map_and_landmarks.zip";
-                link.click();
-                URL.revokeObjectURL(link.href);
-            });
-        });
+            // Generate the parent ZIP and trigger download
+            const finalContent = await parentZip.generateAsync({ type: "blob" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(finalContent);
+            link.download = "all_maps.zip";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+    
+        createAllMaps();
     }
-
 }
 
 function updateLandmarks(clusterDescriptions) {
