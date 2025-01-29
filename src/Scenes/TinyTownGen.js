@@ -117,7 +117,6 @@ class TinyTownGen extends Phaser.Scene {
                         break;
                     case 2:
                         preset = Phaser.Utils.Array.GetRandom(forestPresets);
-                        //description = "Forest";
                         itemCount = ++this.forestCount;
                         break;
                 }
@@ -205,7 +204,6 @@ class TinyTownGen extends Phaser.Scene {
             const row = [];
             for (let x = 0; x < this.mapWidth; x++) {
                 const noiseValue = noise.simplex2(x / 10, y / 10);
-                console.log(noiseValue);
                 let tile;
                 if (noiseValue > 0.5) {
                     tile = 0;
@@ -370,46 +368,104 @@ function updateDescriptiveText(clusterDescriptions) {
         switch (currentCode.slice(0,2)) {
             case "Ho":
                 descriptionText += "House";
-                englishIdList.push("House");
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
-                        descriptionText +=  ", House with grey roof, House with orange wood walls, House with one chimney, Skinny house, Short house, House with single door"
+                        descriptionText += ", One story house, House with grey roof, House with orange wood walls, House with one chimney, Skinny house, House with single door, House with zero windows"
+                        englishIdList.push("Grey roofed 1 story skinny House");
                         break;
                     case 2:
-                        descriptionText += ", House with orange roof, House with grey stone walls, House with one chimney, Skinny house, Short house, House with single door"
+                        descriptionText += ", One story house, House with orange roof, House with grey stone walls, House with one chimney, Skinny house, House with single door, House with zero windows"
+                        englishIdList.push("Orange roofed 1 story skinny House");
                         break;
                     case 3:
-                        descriptionText += ", House with grey roof, House with orange wood walls, House with two chimneys, Wide house, Short house, House with single door"
+                        descriptionText += ", One story house, House with grey roof, House with orange wood walls, House with two chimneys, Wide house, House with single door, house with one window"
+                        englishIdList.push("Grey roofed 1 story wide House");
                         break;
                     case 4:
-                        descriptionText += ", House with orange roof, House with grey stone walls, House with two chimneys, Skinny house, Tall house, House with double doors"
+                        descriptionText += ", Four story house, House with orange roof, House with grey stone walls, House with two chimneys, Skinny house, House with double doors, House with two windows"
+                        englishIdList.push("Orange roofed 4 story skinny House");
+                        break;
+                    case 5:
+                        descriptionText += ", Two story house, House with orange roof, House with grey stone walls, House with two chimneys, Wide house, House with single door, House with two windows"
+                        englishIdList.push("Orange roofed 2 story wide House");
+                        break;
+                    case 6:
+                        descriptionText += ", Two story house, House with orange roof, House with grey stone walls, House with one chimney, Skinny house, House with single door, House with one window"
+                        englishIdList.push("Orange roofed 2 story skinny House");
+                        break;
+                    case 7:
+                        descriptionText += ", Two story house, House with grey roof, House with orange wood walls, House with one chimney, Skinny house, House with single door, House with one window"
+                        englishIdList.push("Grey roofed 2 story skinny House");
                         break;
                 }
                 break;
             case "Fe":
                 descriptionText += "Fenced Area";
-                englishIdList.push("Fenced Area");
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
-                        descriptionText += ", Square fence, three by three fence, one fenced in tile, Small fenced area"
+                        descriptionText += ", Square fence, three by three fence, one fenced in tile, Small fenced area, Fence with centered entrance"
+                        englishIdList.push("3x3 Fenced Area with a centered entrance");
                         break;
                     case 2:
-                        descriptionText += ", Square fence, five by five fence, nine fenced in tiles, Large fenced area"
+                        descriptionText += ", Square fence, five by five fence, nine fenced in tiles, Medium fenced area, Fence with centered entrance"
+                        englishIdList.push("5x5 Fenced Area with a centered entrance");
                         break;
                     case 3:
-                        descriptionText += ", Rectangular fence, three by five fence, three fenced in tiles, Medium fenced area"
+                        descriptionText += ", Rectangular fence, three by five fence, three fenced in tiles, small fenced area, Wide fence, Fence with centered entrance"
+                        englishIdList.push("3x5 Fenced Area with a centered entrance");
+                        break;
+                    case 4:
+                        descriptionText += ", Rectangular fence, four by seven fence, ten fenced in tiles, Medium fenced area, Wide fence, Fence with left entrance"
+                        englishIdList.push("4x7 Fenced Area with a left entrance");
+                        break;
+                    case 5:
+                        descriptionText += ", Rectangular fence, four by seven fence, ten fenced in tiles, Medium fenced area, Wide fence, Fence with right entrance"
+                        englishIdList.push("4x7 Fenced Area with a right entrance");
+                        break;
+                    case 6:
+                        descriptionText += ", Rectangular fence, five by six fence, twelve fenced in tiles, Large fenced area, Wide fence, Fence with right entrance"
+                        englishIdList.push("5x6 Fenced Area with a right entrance");
+                        break;
+                    case 7:
+                        descriptionText += ", Rectangular fence, five by six fence, twelve fenced in tile, Large fenced area, Wide fence, Fence with right entrance"
+                        englishIdList.push("5x6 Fenced Area with a right entrance");
+                        break;
+                    case 8:
+                        descriptionText += ", Rectangular fence, five by six fence, twelve fenced in tiles, Large fenced area, Wide fence, Fence with left entrance"
+                        englishIdList.push("5x6 Fenced Area with a left entrance");
+                        break;
+                    case 9:
+                        descriptionText += ", Rectangular fence, six by five fence, twelve fenced in tiles, Large fenced area, Tall fence, Fence with left entrance"
+                        englishIdList.push("6x5 Fenced Area with a left entrance");
+                        break;
+                    case 0:
+                        descriptionText += ", Rectangular fence, six by five fence, twelve fenced in tiles, Large fenced area, Tall fence, Fence with right entrance"
+                        englishIdList.push("6x5 Fenced Area with a right entrance");
                         break;
                 }    
                 break;
             case "Fo":
                 descriptionText += "Forest";
-                englishIdList.push("Forest");
                 switch (Number(currentCode[currentCode.length - 1])) {
                     case 1:
-                        descriptionText += ", Forest with two mushrooms, Mostly green forest, Spread out forest"
+                        descriptionText += ", Forest with two mushrooms, Mostly green forest, Forest with zero beehives, Small forest"
+                        englishIdList.push("Small Green Forest");
                         break;
                     case 2:
-                        descriptionText += ", Forest with one mushrooms, Mostly yellow forest, crowded forest, Forest with one beehive"
+                        descriptionText += ", Forest with one mushroom, Mostly yellow forest, Forest with one beehive, Small forest"
+                        englishIdList.push("Small Yellow Forest");
+                        break;
+                    case 3:
+                        descriptionText += ", Forest with four mushrooms, Mostly green forest, Forest with zero beehives, Medium forest"
+                        englishIdList.push("Medium Green Forest");
+                        break;
+                    case 4:
+                        descriptionText += ", Forest with three mushrooms, Mostly yellow forest, Forest with one beehive, Medium forest"
+                        englishIdList.push("Medium Yellow Forest");
+                        break;
+                    case 5:
+                        descriptionText += ", Forest with five mushrooms, Mostly green forest, Forest with one beehive, Large Forest"
+                        englishIdList.push("Large Green Forest");
                         break;
                 }
                 break;
